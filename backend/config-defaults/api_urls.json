@@ -1,0 +1,33 @@
+{
+  "anthropic": {
+    "url": "https://api.anthropic.com/v1/messages"
+  },
+  "deepseek": {
+    "url": "https://api.deepseek.com/v1/chat/completions"
+  },
+  "gemini": {
+    "url": "https://generativelanguage.googleapis.com",
+    "format": "gemini"
+  },
+  "kimi": {
+    "url": "https://api.moonshot.ai/v1/chat/completions"
+  },
+  "llamacpp": {
+    "url": "http://127.0.0.1:9000/completion"
+  },
+  "ollama": {
+    "url": "http://localhost:11434/v1/chat/completions"
+  },
+  "openai": {
+    "url": "https://api.openai.com/v1/chat/completions"
+  },
+  "openrouter": {
+    "url": "https://openrouter.ai/api/v1/chat/completions"
+  },
+  "vllm": {
+    "url": "http://localhost:8000/v1/chat/completions"
+  },
+  "zai": {
+    "url": "https://api.z.ai/api/paas/v4/chat/completions"
+  }
+}

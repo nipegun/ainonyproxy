@@ -1,0 +1,68 @@
+{% extends "auth-base.html" %}
+{% set vPageTitleKey = "auth.title" %}
+{% set vPageTitleFallback = "Log in" %}
+
+{% block content %}
+    <h1 data-i18n="auth.title">Log in</h1>
+    <p class="subtitle" data-i18n="auth.subtitle">Access the ainonyproxy dashboard</p>
+
+    <form id="login-form" data-next="{{ vNext }}">
+      <div class="error" id="login-error" role="alert"></div>
+      <div class="form-field">
+        <label for="username" data-i18n="common.username">Username</label>
+        <input id="username" name="username" autocomplete="username" required autofocus maxlength="64">
+      </div>
+      <div class="form-field">
+        <label for="password" data-i18n="common.password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+      </div>
+      <button type="submit" id="login-submit" data-i18n="auth.submit">Log in</button>
+    </form>
+
+    <div class="auth-links">
+      <a href="/auth/recover/" data-i18n="auth.forgotLink">Forgot your password?</a>
+      {% if vRegistrationOpen %}
+      <a href="/auth/register/" data-i18n="auth.registerLink">Create an account</a>
+      {% endif %}
+    </div>
+
+    <p class="hint" data-i18n="auth.forgotHint">Without a recovery code, an administrator can set a new password from the dashboard, or from the server terminal (see the MANUAL).</p>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    document.getElementById('login-form').addEventListener('submit', async function(pEvent) {
+      pEvent.preventDefault();
+      var vForm = pEvent.target;
+      var vError = document.getElementById('login-error');
+      var vButton = document.getElementById('login-submit');
+      vError.classList.remove('visible');
+      vButton.disabled = true;
+      vButton.textContent = fTranslateOr('auth.submitting', 'Logging in...');
+      try {
+        var vResponse = await fetch('/api/auth/login', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: document.getElementById('username').value.trim(),
+            password: document.getElementById('password').value,
+            next: vForm.getAttribute('data-next') || null
+          })
+        });
+        var dData = null;
+        try { dData = await vResponse.json(); } catch (vParseError) { dData = null; }
+        if (vResponse.ok && dData && fIsSafeRedirect(dData.redirect)) {
+          window.location.href = dData.redirect;
+          return;
+        }
+        fShowError('login-error', fErrorTextFromData(dData));
+      } catch (vNetworkError) {
+        fShowError('login-error', fTranslateOr('common.connectionError', 'Connection error'));
+      } finally {
+        vButton.disabled = false;
+        vButton.textContent = fTranslateOr('auth.submit', 'Log in');
+      }
+    });
+  </script>
+{% endblock %}

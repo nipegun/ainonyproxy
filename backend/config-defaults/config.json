@@ -1,0 +1,30 @@
+{
+  "mode": "mask",
+  "server": {
+    "host": "0.0.0.0",
+    "port": 11080,
+    "ssl_port": 11443,
+    "proxy_protocol": false,
+    "ssl": {
+      "enabled": false,
+      "certfile": null,
+      "keyfile": null
+    }
+  },
+  "masking": {
+    "show_markers": false,
+    "marker_text": "[protected]"
+  },
+  "logging": {
+    "retention_days": 30,
+    "log_content": false,
+    "log_masked_content": true
+  },
+  "dashboard": {
+    "enabled": true,
+    "session_hours": 12
+  },
+  "ui": {
+    "default_language": "en-US"
+  }
+}

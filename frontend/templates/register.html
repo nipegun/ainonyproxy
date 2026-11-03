@@ -1,0 +1,116 @@
+{% extends "auth-base.html" %}
+{% set vPageTitleKey = "register.title" %}
+{% set vPageTitleFallback = "Create an account" %}
+
+{% block content %}
+    <h1 data-i18n="register.title">Create an account</h1>
+    <p class="subtitle" data-i18n="register.subtitle">Get your own access to the ainonyproxy dashboard</p>
+
+    {% if vRegistrationOpen %}
+    <div id="register-step-form">
+      <form id="register-form">
+        <div class="error" id="register-error" role="alert"></div>
+        <div class="form-field">
+          <label for="username" data-i18n="common.username">Username</label>
+          <input id="username" name="username" autocomplete="username" required autofocus maxlength="64" pattern="[A-Za-z0-9._\-]{1,64}" spellcheck="false" autocapitalize="none">
+        </div>
+        <div class="form-field">
+          <label for="password" data-i18n="common.password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="new-password" required minlength="8">
+        </div>
+        <div class="form-field">
+          <label for="password-2" data-i18n="register.repeatPassword">Repeat the password</label>
+          <input id="password-2" name="password-2" type="password" autocomplete="new-password" required minlength="8">
+        </div>
+        <p class="form-hint" data-i18n="register.hint">Username: letters, digits, dots, hyphens and underscores (up to 64). Password: at least 8 characters.</p>
+        <button type="submit" id="register-submit" data-i18n="register.submit">Create account</button>
+      </form>
+    </div>
+
+    <div id="register-step-code" class="code-step" hidden>
+      <div class="notice" data-i18n="recoveryCode.saveTitle">Save your recovery code</div>
+      <p class="code-step-text" data-i18n="recoveryCode.saveText">It is the only way to set a new password by yourself if you forget it. It is shown only this once: copy it or write it down, and keep it in a safe place.</p>
+      <code class="code-display" id="register-code"></code>
+      <div class="code-actions">
+        <button type="button" class="btn-secondary" id="register-copy" data-i18n="common.copy">Copy</button>
+      </div>
+      <label class="checkbox-row">
+        <input type="checkbox" id="register-saved">
+        <span data-i18n="recoveryCode.savedCheck">I have saved my recovery code</span>
+      </label>
+      <button type="button" class="btn-primary" id="register-continue" disabled data-i18n="register.continue">Go to my dashboard</button>
+    </div>
+    {% else %}
+    <div class="notice" data-i18n="register.closed">The registration is closed. Ask an administrator to create an account for you.</div>
+    {% endif %}
+
+    <div class="auth-links" id="register-links">
+      <a href="/auth/login/" data-i18n="register.haveAccount">I already have an account</a>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    var vRegisterRedirect = '/user/dashboard/';
+    var vRegisterForm = document.getElementById('register-form');
+
+    if (vRegisterForm) {
+      vRegisterForm.addEventListener('submit', async function(pEvent) {
+        pEvent.preventDefault();
+        var vError = document.getElementById('register-error');
+        var vButton = document.getElementById('register-submit');
+        vError.classList.remove('visible');
+
+        var vPassword = document.getElementById('password').value;
+        if (vPassword !== document.getElementById('password-2').value) {
+          fShowError('register-error', fTranslateOr('errors.passwords_do_not_match', 'The passwords do not match.'));
+          return;
+        }
+
+        vButton.disabled = true;
+        vButton.textContent = fTranslateOr('register.submitting', 'Creating the account...');
+        try {
+          var vResponse = await fetch('/api/auth/register', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              username: document.getElementById('username').value.trim(),
+              password: vPassword
+            })
+          });
+          var dData = null;
+          try { dData = await vResponse.json(); } catch (vParseError) { dData = null; }
+          if (vResponse.ok && dData && dData.recovery_code) {
+            if (fIsSafeRedirect(dData.redirect)) vRegisterRedirect = dData.redirect;
+            vRegisterForm.reset();
+            document.getElementById('register-code').textContent = dData.recovery_code;
+            document.getElementById('register-step-form').hidden = true;
+            document.getElementById('register-links').hidden = true;
+            document.getElementById('register-step-code').hidden = false;
+            document.getElementById('register-copy').focus();
+            return;
+          }
+          fShowError('register-error', fErrorTextFromData(dData));
+        } catch (vNetworkError) {
+          fShowError('register-error', fTranslateOr('common.connectionError', 'Connection error'));
+        } finally {
+          vButton.disabled = false;
+          vButton.textContent = fTranslateOr('register.submit', 'Create account');
+        }
+      });
+
+      document.getElementById('register-copy').addEventListener('click', function(pEvent) {
+        fCopyCode('register-code', pEvent.currentTarget);
+      });
+
+      document.getElementById('register-saved').addEventListener('change', function(pEvent) {
+        document.getElementById('register-continue').disabled = !pEvent.target.checked;
+      });
+
+      document.getElementById('register-continue').addEventListener('click', function() {
+        window.location.href = vRegisterRedirect;
+      });
+    }
+  </script>
+{% endblock %}

@@ -1,0 +1,30 @@
+# ainonyproxy - Python dependencies
+
+# Web framework
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+hypercorn>=0.17.0
+
+# Asynchronous HTTP client (for the upstream LLM)
+httpx>=0.26.0
+
+# Data validation
+pydantic>=2.5.0
+
+# HTML templates
+jinja2>=3.1.2
+
+# Markdown
+markdown>=3.5.0
+
+# Language detection
+langdetect>=1.0.9
+
+# Presidio (PII detection) - integrated directly
+presidio-analyzer>=2.2.0
+presidio-anonymizer>=2.2.0
+
+# spaCy (NLP for Presidio)
+# NOTE: the spaCy models are installed separately with:
+#   python3 presidio/setup.py --languages en,es
+spacy>=3.7.0

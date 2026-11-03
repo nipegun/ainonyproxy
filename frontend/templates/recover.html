@@ -1,0 +1,116 @@
+{% extends "auth-base.html" %}
+{% set vPageTitleKey = "recover.title" %}
+{% set vPageTitleFallback = "Recover your password" %}
+
+{% block content %}
+    <h1 data-i18n="recover.title">Recover your password</h1>
+    <p class="subtitle" data-i18n="recover.subtitle">Set a new password with the recovery code of your account.</p>
+
+    <div id="recover-step-form">
+      <form id="recover-form">
+        <div class="error" id="recover-error" role="alert"></div>
+        <div class="form-field">
+          <label for="username" data-i18n="common.username">Username</label>
+          <input id="username" name="username" autocomplete="username" required autofocus maxlength="64" spellcheck="false" autocapitalize="none">
+        </div>
+        <div class="form-field">
+          <label for="recovery-code" data-i18n="recover.recoveryCode">Recovery code</label>
+          <input id="recovery-code" name="recovery-code" class="code-input" autocomplete="off" required maxlength="64" spellcheck="false" autocapitalize="characters" placeholder="XXXXX-XXXXX-XXXXX-XXXXX">
+        </div>
+        <div class="form-field">
+          <label for="new-password" data-i18n="recover.newPassword">New password</label>
+          <input id="new-password" name="new-password" type="password" autocomplete="new-password" required minlength="8">
+        </div>
+        <div class="form-field">
+          <label for="new-password-2" data-i18n="recover.repeatPassword">Repeat the new password</label>
+          <input id="new-password-2" name="new-password-2" type="password" autocomplete="new-password" required minlength="8">
+        </div>
+        <p class="form-hint" data-i18n="account.minLength">At least 8 characters.</p>
+        <button type="submit" id="recover-submit" data-i18n="recover.submit">Set the new password</button>
+      </form>
+      <p class="hint" data-i18n="auth.forgotHint">Without a recovery code, an administrator can set a new password from the dashboard, or from the server terminal (see the MANUAL).</p>
+    </div>
+
+    <div id="recover-step-code" class="code-step" hidden>
+      <div class="notice" data-i18n="recover.done">Your password has been changed and every session of your account has been closed.</div>
+      <p class="code-step-text" data-i18n="recover.newCodeText">The recovery code you used no longer works. This is your new one: it is shown only this once, so copy it or write it down and keep it in a safe place.</p>
+      <code class="code-display" id="recover-code"></code>
+      <div class="code-actions">
+        <button type="button" class="btn-secondary" id="recover-copy" data-i18n="common.copy">Copy</button>
+      </div>
+      <label class="checkbox-row">
+        <input type="checkbox" id="recover-saved">
+        <span data-i18n="recoveryCode.savedCheck">I have saved my recovery code</span>
+      </label>
+      <button type="button" class="btn-primary" id="recover-continue" disabled data-i18n="recover.goToLogin">Go to log in</button>
+    </div>
+
+    <div class="auth-links" id="recover-links">
+      <a href="/auth/login/" data-i18n="recover.backToLogin">Back to log in</a>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    var vRecoverRedirect = '/auth/login/';
+    var vRecoverForm = document.getElementById('recover-form');
+
+    vRecoverForm.addEventListener('submit', async function(pEvent) {
+      pEvent.preventDefault();
+      var vError = document.getElementById('recover-error');
+      var vButton = document.getElementById('recover-submit');
+      vError.classList.remove('visible');
+
+      var vNewPassword = document.getElementById('new-password').value;
+      if (vNewPassword !== document.getElementById('new-password-2').value) {
+        fShowError('recover-error', fTranslateOr('errors.passwords_do_not_match', 'The new passwords do not match.'));
+        return;
+      }
+
+      vButton.disabled = true;
+      vButton.textContent = fTranslateOr('recover.submitting', 'Checking...');
+      try {
+        var vResponse = await fetch('/api/auth/recover', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: document.getElementById('username').value.trim(),
+            recovery_code: document.getElementById('recovery-code').value,
+            new_password: vNewPassword
+          })
+        });
+        var dData = null;
+        try { dData = await vResponse.json(); } catch (vParseError) { dData = null; }
+        if (vResponse.ok && dData && dData.recovery_code) {
+          if (fIsSafeRedirect(dData.redirect)) vRecoverRedirect = dData.redirect;
+          vRecoverForm.reset();
+          document.getElementById('recover-code').textContent = dData.recovery_code;
+          document.getElementById('recover-step-form').hidden = true;
+          document.getElementById('recover-links').hidden = true;
+          document.getElementById('recover-step-code').hidden = false;
+          document.getElementById('recover-copy').focus();
+          return;
+        }
+        fShowError('recover-error', fErrorTextFromData(dData));
+      } catch (vNetworkError) {
+        fShowError('recover-error', fTranslateOr('common.connectionError', 'Connection error'));
+      } finally {
+        vButton.disabled = false;
+        vButton.textContent = fTranslateOr('recover.submit', 'Set the new password');
+      }
+    });
+
+    document.getElementById('recover-copy').addEventListener('click', function(pEvent) {
+      fCopyCode('recover-code', pEvent.currentTarget);
+    });
+
+    document.getElementById('recover-saved').addEventListener('change', function(pEvent) {
+      document.getElementById('recover-continue').disabled = !pEvent.target.checked;
+    });
+
+    document.getElementById('recover-continue').addEventListener('click', function() {
+      window.location.href = vRecoverRedirect;
+    });
+  </script>
+{% endblock %}

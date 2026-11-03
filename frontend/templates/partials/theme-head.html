@@ -1,0 +1,219 @@
+  {#
+    Light and dark theme, shared by every page. Goes inside <head>.
+
+    Without a choice saved in this browser the page follows the system theme
+    (prefers-color-scheme), and changes by itself when the system changes.
+    A choice saved in localStorage ("light" or "dark") sets data-theme on <html>
+    before the first paint, so the page never flashes the other theme.
+  #}
+  <meta name="color-scheme" content="light dark">
+  <script>
+    (function() {
+      var vTheme = null;
+      try { vTheme = localStorage.getItem('ainonyproxy_theme'); } catch (vError) {}
+      if (vTheme === 'light' || vTheme === 'dark') document.documentElement.setAttribute('data-theme', vTheme);
+    })();
+  </script>
+  <style>
+    /* ===== THEME: dark (default) ===== */
+    :root {
+      color-scheme: dark;
+      --bg: #0c0f1a;
+      --bg-sidebar: #0c0f1a;
+      --bg-card: #151929;
+      --bg-card-hover: #1a1f33;
+      --bg-input: #10131f;
+      --bg-elevated: #1a1f33;
+      --bg-topbar: rgba(12, 15, 26, 0.8);
+      --bg-sunken: rgba(0, 0, 0, 0.25);
+      --bg-code: rgba(0, 0, 0, 0.3);
+      --border-card: #1f2640;
+      --border-subtle: #191e30;
+      --border-strong: #283050;
+      --text-1: #f0f2f5;
+      --text-2: #94a3b8;
+      --text-3: #4b5675;
+      --text-muted: #4b5675;
+      --on-accent: #ffffff;
+      --accent: #10b981;
+      --accent-hover: #0ea472;
+      --accent-glow: rgba(16, 185, 129, 0.12);
+      --accent-2: #6366f1;
+      --accent-3: #ec4899;
+      --amber: #f59e0b;
+      --amber-light: rgba(245, 158, 11, 0.12);
+      --blue: #3b82f6;
+      --blue-light: rgba(59, 130, 246, 0.12);
+      --green: #10b981;
+      --green-light: rgba(16, 185, 129, 0.12);
+      --red: #ef4444;
+      --red-hover: #dc2626;
+      --red-light: rgba(239, 68, 68, 0.12);
+      --red-border: rgba(239, 68, 68, 0.35);
+      --error-text: #fca5a5;
+      --teal: #14b8a6;
+      --teal-light: rgba(20, 184, 166, 0.12);
+      --purple: #8b5cf6;
+      --indigo-light: rgba(99, 102, 241, 0.12);
+      --tag-bg: rgba(99, 102, 241, 0.1);
+      --tag-border: rgba(99, 102, 241, 0.15);
+      --tag-text: #a5b4fc;
+      --tint-02: rgba(255, 255, 255, 0.02);
+      --tint-03: rgba(255, 255, 255, 0.03);
+      --tint-04: rgba(255, 255, 255, 0.04);
+      --tint-05: rgba(255, 255, 255, 0.05);
+      --tint-10: rgba(255, 255, 255, 0.1);
+      --spinner-track: rgba(255, 255, 255, 0.06);
+      --scrollbar: rgba(255, 255, 255, 0.08);
+      --scrollbar-hover: rgba(255, 255, 255, 0.14);
+      --backdrop: rgba(0, 0, 0, 0.55);
+      --shadow-1: rgba(0, 0, 0, 0.35);
+      --shadow-2: rgba(0, 0, 0, 0.4);
+      --shadow-3: rgba(0, 0, 0, 0.5);
+    }
+
+    /* ===== THEME: light (system preference, unless dark was chosen) ===== */
+    @media (prefers-color-scheme: light) {
+      :root:not([data-theme="dark"]) {
+        color-scheme: light;
+        --bg: #f4f6fb;
+        --bg-sidebar: #ffffff;
+        --bg-card: #ffffff;
+        --bg-card-hover: #f8fafc;
+        --bg-input: #ffffff;
+        --bg-elevated: #ffffff;
+        --bg-topbar: rgba(244, 246, 251, 0.85);
+        --bg-sunken: #f1f5f9;
+        --bg-code: #f1f5f9;
+        --border-card: #e2e8f0;
+        --border-subtle: #eef2f7;
+        --border-strong: #cbd5e1;
+        --text-1: #0f172a;
+        --text-2: #475569;
+        --text-3: #64748b;
+        --text-muted: #64748b;
+        --on-accent: #ffffff;
+        --accent: #047857;
+        --accent-hover: #065f46;
+        --accent-glow: rgba(5, 150, 105, 0.1);
+        --accent-2: #4f46e5;
+        --accent-3: #db2777;
+        --amber: #b45309;
+        --amber-light: rgba(245, 158, 11, 0.15);
+        --blue: #1d4ed8;
+        --blue-light: rgba(59, 130, 246, 0.12);
+        --green: #047857;
+        --green-light: rgba(16, 185, 129, 0.14);
+        --red: #dc2626;
+        --red-hover: #b91c1c;
+        --red-light: rgba(239, 68, 68, 0.1);
+        --red-border: rgba(220, 38, 38, 0.35);
+        --error-text: #b91c1c;
+        --teal: #0f766e;
+        --teal-light: rgba(20, 184, 166, 0.12);
+        --purple: #7c3aed;
+        --indigo-light: rgba(79, 70, 229, 0.1);
+        --tag-bg: rgba(79, 70, 229, 0.08);
+        --tag-border: rgba(79, 70, 229, 0.2);
+        --tag-text: #4338ca;
+        --tint-02: rgba(15, 23, 42, 0.03);
+        --tint-03: rgba(15, 23, 42, 0.04);
+        --tint-04: rgba(15, 23, 42, 0.05);
+        --tint-05: rgba(15, 23, 42, 0.06);
+        --tint-10: rgba(15, 23, 42, 0.1);
+        --spinner-track: rgba(15, 23, 42, 0.1);
+        --scrollbar: rgba(15, 23, 42, 0.15);
+        --scrollbar-hover: rgba(15, 23, 42, 0.25);
+        --backdrop: rgba(15, 23, 42, 0.4);
+        --shadow-1: rgba(15, 23, 42, 0.1);
+        --shadow-2: rgba(15, 23, 42, 0.12);
+        --shadow-3: rgba(15, 23, 42, 0.2);
+      }
+    }
+
+    /* ===== THEME: light (chosen in this browser) ===== */
+    :root[data-theme="light"] {
+      color-scheme: light;
+      --bg: #f4f6fb;
+      --bg-sidebar: #ffffff;
+      --bg-card: #ffffff;
+      --bg-card-hover: #f8fafc;
+      --bg-input: #ffffff;
+      --bg-elevated: #ffffff;
+      --bg-topbar: rgba(244, 246, 251, 0.85);
+      --bg-sunken: #f1f5f9;
+      --bg-code: #f1f5f9;
+      --border-card: #e2e8f0;
+      --border-subtle: #eef2f7;
+      --border-strong: #cbd5e1;
+      --text-1: #0f172a;
+      --text-2: #475569;
+      --text-3: #64748b;
+      --text-muted: #64748b;
+      --on-accent: #ffffff;
+      --accent: #047857;
+      --accent-hover: #065f46;
+      --accent-glow: rgba(5, 150, 105, 0.1);
+      --accent-2: #4f46e5;
+      --accent-3: #db2777;
+      --amber: #b45309;
+      --amber-light: rgba(245, 158, 11, 0.15);
+      --blue: #1d4ed8;
+      --blue-light: rgba(59, 130, 246, 0.12);
+      --green: #047857;
+      --green-light: rgba(16, 185, 129, 0.14);
+      --red: #dc2626;
+      --red-hover: #b91c1c;
+      --red-light: rgba(239, 68, 68, 0.1);
+      --red-border: rgba(220, 38, 38, 0.35);
+      --error-text: #b91c1c;
+      --teal: #0f766e;
+      --teal-light: rgba(20, 184, 166, 0.12);
+      --purple: #7c3aed;
+      --indigo-light: rgba(79, 70, 229, 0.1);
+      --tag-bg: rgba(79, 70, 229, 0.08);
+      --tag-border: rgba(79, 70, 229, 0.2);
+      --tag-text: #4338ca;
+      --tint-02: rgba(15, 23, 42, 0.03);
+      --tint-03: rgba(15, 23, 42, 0.04);
+      --tint-04: rgba(15, 23, 42, 0.05);
+      --tint-05: rgba(15, 23, 42, 0.06);
+      --tint-10: rgba(15, 23, 42, 0.1);
+      --spinner-track: rgba(15, 23, 42, 0.1);
+      --scrollbar: rgba(15, 23, 42, 0.15);
+      --scrollbar-hover: rgba(15, 23, 42, 0.25);
+      --backdrop: rgba(15, 23, 42, 0.4);
+      --shadow-1: rgba(15, 23, 42, 0.1);
+      --shadow-2: rgba(15, 23, 42, 0.12);
+      --shadow-3: rgba(15, 23, 42, 0.2);
+    }
+
+    /* ===== THEME SWITCH (System / Light / Dark) ===== */
+    .theme-switch {
+      display: inline-flex;
+      flex-shrink: 0;
+      gap: 2px;
+      padding: 2px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+    }
+
+    .theme-option {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.875rem;
+      height: 1.625rem;
+      background: none;
+      border: none;
+      border-radius: 6px;
+      color: var(--text-3);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .theme-option:hover { color: var(--text-1); background: var(--tint-05); }
+    .theme-option.active { color: var(--accent); background: var(--accent-glow); }
+    .theme-option svg { flex-shrink: 0; }
+  </style>

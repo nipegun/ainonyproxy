@@ -1,0 +1,33 @@
+{
+  "presidio_url": "local",
+  "languages": ["es", "en"],
+  "fallback_language": "es",
+  "score_threshold": 0.5,
+  "entities": [
+    "AGE",
+    "CREDIT_CARD",
+    "CRYPTO",
+    "DATE_TIME",
+    "EMAIL",
+    "EMAIL_ADDRESS",
+    "ES_NIE",
+    "ES_NIF",
+    "IBAN_CODE",
+    "ID",
+    "IP_ADDRESS",
+    "LOCATION",
+    "MAC_ADDRESS",
+    "MEDICAL_LICENSE",
+    "NRP",
+    "ORGANIZATION",
+    "PERSON",
+    "PHONE_NUMBER",
+    "UK_NHS",
+    "URL",
+    "US_BANK_NUMBER",
+    "US_DRIVER_LICENSE",
+    "US_ITIN",
+    "US_PASSPORT",
+    "US_SSN"
+  ]
+}

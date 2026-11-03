@@ -1,0 +1,2389 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ainonyproxy Dashboard</title>
+  {% include "partials/theme-head.html" %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* The colors of both themes live in partials/theme-head.html */
+    :root {
+      --sidebar-w: 15.625rem;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    [hidden] { display: none !important; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text-1);
+      min-height: 100vh;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: var(--sidebar-w);
+      max-width: 85%;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border-card);
+      display: flex;
+      flex-direction: column;
+      z-index: 100;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .sidebar-header {
+      padding: 1.5rem 1.25rem 1.25rem;
+      border-bottom: 1px solid var(--border-card);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+    }
+
+    .logo-icon {
+      width: 2rem;
+      height: 2rem;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, #6366f1, #ec4899);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+    }
+
+    .logo-text {
+      min-width: 0;
+      font-size: 1.0625rem;
+      font-weight: 700;
+      color: var(--text-1);
+      letter-spacing: -0.01em;
+      overflow-wrap: anywhere;
+    }
+
+    .sidebar-search {
+      padding: 1rem 1rem 0.5rem;
+      position: relative;
+    }
+
+    .sidebar-search svg {
+      position: absolute;
+      left: 1.75rem;
+      top: 50%;
+      transform: translateY(-60%);
+      color: var(--text-3);
+      pointer-events: none;
+    }
+
+    .sidebar-search input {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 10px;
+      padding: 0.55rem 0.75rem 0.55rem 2.25rem;
+      color: var(--text-1);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8125rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .sidebar-search input::placeholder { color: var(--text-3); }
+    .sidebar-search input:focus { border-color: var(--accent); }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 0.75rem 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.6rem 0.875rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-2);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .nav-item span { min-width: 0; overflow-wrap: anywhere; }
+
+    .nav-item:hover {
+      background: var(--tint-04);
+      color: var(--text-1);
+    }
+
+    .nav-item.active {
+      color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    .nav-item.active svg { color: var(--accent); }
+
+    .nav-item svg {
+      flex-shrink: 0;
+      color: var(--text-3);
+      transition: color 0.15s;
+    }
+
+    .nav-item:hover svg { color: var(--text-2); }
+
+    .nav-separator {
+      height: 1px;
+      background: var(--border-card);
+      margin: 0.5rem 0.25rem;
+    }
+
+    .sidebar-footer {
+      padding: 0.75rem 1rem 1rem;
+      border-top: 1px solid var(--border-card);
+      display: flex;
+      flex-direction: column;
+      gap: 0.625rem;
+    }
+
+    .sidebar-user {
+      min-width: 0;
+      font-size: 0.75rem;
+      color: var(--text-3);
+      overflow-wrap: anywhere;
+    }
+
+    .sidebar-user strong { color: var(--text-2); font-weight: 600; }
+
+    .theme-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      min-width: 0;
+    }
+
+    .theme-row-label {
+      min-width: 0;
+      font-size: 0.75rem;
+      color: var(--text-3);
+      overflow-wrap: anywhere;
+    }
+
+    .sidebar-backdrop { display: none; }
+
+    /* ===== MAIN ===== */
+    .main-wrapper {
+      margin-left: var(--sidebar-w);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    /* ===== TOPBAR ===== */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      background: var(--bg-topbar);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-card);
+    }
+
+    .topbar-inner {
+      padding: 0 2rem;
+      min-height: 72px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .sidebar-toggle {
+      display: none;
+      flex-shrink: 0;
+      background: none;
+      border: none;
+      color: var(--text-2);
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 8px;
+      margin-right: 0.75rem;
+    }
+
+    .sidebar-toggle:hover { background: var(--tint-05); }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .header-title-group {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .header-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-1);
+      letter-spacing: -0.02em;
+      overflow-wrap: anywhere;
+    }
+
+    .header-subtitle {
+      font-size: 0.8125rem;
+      color: var(--text-2);
+      margin-top: 1px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-shrink: 0;
+    }
+
+    .btn-outline {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: transparent;
+      color: var(--text-2);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+
+    .btn-outline:hover {
+      border-color: var(--text-3);
+      color: var(--text-1);
+      background: var(--tint-03);
+    }
+
+    .btn-outline.danger { color: var(--red); border-color: var(--red-border); }
+    .btn-outline.danger:hover { background: var(--red-light); }
+
+    .btn-outline.small { padding: 0.3rem 0.65rem; font-size: 0.75rem; }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.125rem;
+      background: var(--accent);
+      color: var(--on-accent);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-primary:disabled { opacity: 0.6; cursor: wait; }
+    .btn-primary.danger { background: var(--red); }
+    .btn-primary.danger:hover { background: var(--red-hover); }
+
+    .mode-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.3rem 0.75rem;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .mode-badge.route { background: var(--green-light); color: var(--green); }
+    .mode-badge.mask { background: var(--amber-light); color: var(--amber); }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.375rem 0.75rem;
+      background: var(--green-light);
+      border-radius: 20px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--green);
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      flex-shrink: 0;
+      background: var(--green);
+      border-radius: 50%;
+      box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 6px rgba(16,185,129,0.6); }
+      50% { box-shadow: 0 0 12px rgba(16,185,129,0.3); }
+    }
+
+    /* ===== CONTAINER ===== */
+    .container {
+      padding: 1.5rem 2rem 2rem;
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* ===== STAT CARDS ===== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stats-grid.route-mode {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .stat-card {
+      min-width: 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 14px;
+      padding: 1.25rem 1.375rem;
+      transition: all 0.2s ease;
+      animation: fadeIn 0.35s ease-out backwards;
+      position: relative;
+    }
+
+    .stat-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-strong);
+    }
+
+    .stat-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+
+    .stat-label-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-width: 0;
+    }
+
+    .stat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .stat-card:nth-child(1) .stat-dot { background: var(--accent); box-shadow: 0 0 6px rgba(16,185,129,0.4); }
+    .stat-card:nth-child(2) .stat-dot { background: var(--amber); box-shadow: 0 0 6px rgba(245,158,11,0.4); }
+    .stat-card:nth-child(3) .stat-dot { background: var(--teal); box-shadow: 0 0 6px rgba(20,184,166,0.4); }
+    .stat-card:nth-child(4) .stat-dot { background: var(--blue); box-shadow: 0 0 6px rgba(59,130,246,0.4); }
+    .stat-card:nth-child(5) .stat-dot { background: var(--purple); box-shadow: 0 0 6px rgba(139,92,246,0.4); }
+    .stat-card:nth-child(6) .stat-dot { background: var(--accent-3); box-shadow: 0 0 6px rgba(236,72,153,0.4); }
+
+    .stat-menu {
+      color: var(--text-3);
+      font-size: 1rem;
+      letter-spacing: 2px;
+      line-height: 1;
+      cursor: default;
+    }
+
+    .stat-label {
+      min-width: 0;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--text-2);
+      overflow-wrap: anywhere;
+    }
+
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+      color: var(--text-1);
+      overflow-wrap: anywhere;
+    }
+
+    .stat-value.amber { color: var(--amber); }
+    .stat-value.blue { color: var(--blue); }
+    .stat-value.green { color: var(--green); }
+    .stat-value.teal { color: var(--teal); }
+
+    .stat-card.route-only { display: none; }
+    .stats-grid.route-mode .stat-card.route-only { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== CARDS ===== */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .charts-grid.route-mode { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .chart-card,
+    .card {
+      min-width: 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 14px;
+      padding: 1.375rem 1.5rem;
+      animation: fadeIn 0.35s ease-out backwards;
+      margin-bottom: 1rem;
+    }
+
+    .charts-grid .chart-card { margin-bottom: 0; }
+
+    .chart-card.route-only { display: none; }
+    .charts-grid.route-mode .chart-card.route-only { display: block; }
+
+    .chart-title,
+    .card-title {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: var(--text-1);
+      margin-bottom: 1.25rem;
+      overflow-wrap: anywhere;
+    }
+
+    .card-text {
+      font-size: 0.875rem;
+      line-height: 1.7;
+      color: var(--text-2);
+      overflow-wrap: anywhere;
+      margin-bottom: 1rem;
+    }
+
+    .provider-split {
+      display: flex;
+      height: 2.5rem;
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--tint-03);
+    }
+
+    .provider-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--on-accent);
+      min-width: 3rem;
+      transition: width 0.5s ease;
+    }
+
+    .provider-bar.upstream { background: linear-gradient(135deg, #6366f1, #818cf8); }
+    .provider-bar.local { background: linear-gradient(135deg, #10b981, #34d399); }
+
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8125rem;
+      color: var(--text-2);
+      min-width: 0;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      flex-shrink: 0;
+      border-radius: 3px;
+    }
+
+    .legend-dot.upstream { background: var(--accent-2); }
+    .legend-dot.local { background: var(--green); }
+
+    /* Entity Chart */
+    .entity-chart {
+      display: flex;
+      flex-direction: column;
+      gap: 0.875rem;
+    }
+
+    .entity-row {
+      display: grid;
+      grid-template-columns: minmax(0, 7rem) minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .entity-name {
+      min-width: 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--text-2);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .entity-bar-container {
+      min-width: 0;
+      height: 6px;
+      background: var(--tint-05);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .entity-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-2), var(--accent-3));
+      border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+
+    .entity-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-align: right;
+      color: var(--text-1);
+    }
+
+    .empty-chart {
+      text-align: center;
+      padding: 2.5rem 0;
+      color: var(--text-3);
+    }
+
+    .empty-chart-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.75rem;
+      opacity: 0.3;
+    }
+
+    .empty-chart-text { font-size: 0.875rem; overflow-wrap: anywhere; }
+
+    /* ===== TABLES ===== */
+    .logs-section-title {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: var(--text-1);
+      margin-bottom: 1rem;
+    }
+
+    .logs-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 14px;
+      overflow: hidden;
+      animation: fadeIn 0.35s ease-out backwards;
+    }
+
+    .logs-table-wrapper,
+    .table-wrapper { overflow-x: auto; }
+
+    .logs-table,
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .logs-table { min-width: 44rem; }
+    .data-table { min-width: 32rem; }
+
+    .logs-table th,
+    .data-table th {
+      background: var(--tint-02);
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-3);
+      padding: 0.875rem 1.125rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-card);
+    }
+
+    .logs-table th.route-only,
+    .logs-table td.route-only { display: none; }
+    .logs-table.route-mode th.route-only,
+    .logs-table.route-mode td.route-only { display: table-cell; }
+
+    .logs-table td,
+    .data-table td {
+      padding: 0.75rem 1.125rem;
+      border-bottom: 1px solid var(--border-subtle);
+      vertical-align: middle;
+      font-size: 0.875rem;
+      color: var(--text-2);
+      overflow-wrap: anywhere;
+    }
+
+    .data-table td.mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+    }
+
+    .data-table td.actions { white-space: nowrap; }
+    .data-table td.actions .btn-outline + .btn-outline { margin-left: 0.375rem; }
+
+    .logs-table tbody tr {
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .logs-table tbody tr:hover { background: var(--tint-02); }
+    .logs-table tbody tr.expanded { background: rgba(99,102,241,0.04); }
+
+    .arrow-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      margin-right: 0.5rem;
+      border-radius: 6px;
+      background: var(--tint-04);
+      color: var(--text-3);
+      font-size: 0.6rem;
+      transition: all 0.2s ease;
+    }
+
+    .arrow-icon.expanded {
+      transform: rotate(90deg);
+      background: rgba(99,102,241,0.15);
+      color: var(--accent-2);
+    }
+
+    .log-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--text-2);
+    }
+
+    .provider-badge,
+    .role-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.2rem 0.5rem;
+      border-radius: 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+
+    .provider-badge.upstream { background: var(--indigo-light); color: var(--accent-2); }
+    .provider-badge.local { background: var(--green-light); color: var(--green); }
+    .role-badge.admin { background: var(--amber-light); color: var(--amber); }
+    .role-badge.user { background: var(--blue-light); color: var(--blue); }
+
+    .log-model {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--text-2);
+    }
+
+    .log-lang {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-2);
+    }
+
+    .log-lang-fallback { color: var(--amber); }
+
+    .log-lang-arrow {
+      color: var(--text-3);
+      font-size: 0.5rem;
+      margin: 0 0.25rem;
+    }
+
+    .entity-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.375rem;
+    }
+
+    .entity-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.625rem;
+      padding: 0.1875rem 0.5rem;
+      background: var(--tag-bg);
+      border: 1px solid var(--tag-border);
+      border-radius: 5px;
+      color: var(--tag-text);
+      overflow-wrap: anywhere;
+    }
+
+    .log-scan-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--teal);
+    }
+
+    .detail-row { display: none; }
+    .detail-row.visible { display: table-row; }
+
+    .detail-content {
+      padding: 0;
+      background: rgba(99,102,241,0.03);
+      border-bottom: 1px solid var(--border-card);
+    }
+
+    .detail-inner {
+      padding: 1rem 1.5rem;
+      animation: slideDown 0.2s ease;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .masked-content {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      color: var(--text-2);
+      background: var(--bg-sunken);
+      border: 1px solid var(--border-card);
+      border-radius: 10px;
+      padding: 1rem;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .pii-marker {
+      background: var(--amber-light);
+      color: var(--amber);
+      padding: 0.125rem 0.375rem;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    /* ===== FORMS ===== */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+      gap: 0.875rem;
+      align-items: end;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+      min-width: 0;
+    }
+
+    .form-field label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-2);
+      overflow-wrap: anywhere;
+    }
+
+    .form-field input,
+    .form-field select {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      padding: 0.6rem 0.75rem;
+      color: var(--text-1);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.875rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-field input:focus,
+    .form-field select:focus { border-color: var(--accent); }
+
+    .form-hint {
+      font-size: 0.75rem;
+      color: var(--text-3);
+      margin-top: 0.75rem;
+      overflow-wrap: anywhere;
+    }
+
+    .form-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 0.875rem;
+      max-width: 28rem;
+    }
+
+    .info-list {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 0.5rem 1.25rem;
+      font-size: 0.875rem;
+    }
+
+    .info-list dt { color: var(--text-3); }
+    .info-list dd { color: var(--text-1); min-width: 0; overflow-wrap: anywhere; }
+
+    .checkbox-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.625rem;
+      font-size: 0.875rem;
+      color: var(--text-1);
+      cursor: pointer;
+    }
+
+    .checkbox-row input { margin-top: 0.2rem; flex-shrink: 0; accent-color: var(--accent); }
+    .checkbox-row span { min-width: 0; overflow-wrap: anywhere; }
+
+    /* Recovery code, shown only once */
+    .code-display {
+      display: block;
+      margin: 1rem 0 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-align: center;
+      color: var(--accent);
+      background: var(--bg-code);
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      padding: 0.875rem 0.75rem;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      user-select: all;
+    }
+
+    .code-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    /* ===== CODE ===== */
+    .code-block {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      line-height: 1.6;
+      background: var(--bg-code);
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      padding: 0.75rem 0.875rem;
+      margin: 0.5rem 0 1rem;
+      display: block;
+      color: var(--accent);
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    /* ===== LANG SELECTOR ===== */
+    .lang-selector {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .lang-btn {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      padding: 0.5rem 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      transition: all 0.15s;
+      text-transform: uppercase;
+    }
+
+    .lang-btn:hover { border-color: var(--border-strong); color: var(--text-1); }
+
+    .lang-dropdown {
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 0; right: 0;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-card);
+      border-radius: 10px;
+      box-shadow: 0 8px 24px var(--shadow-2);
+      z-index: 200;
+      display: none;
+      overflow: hidden;
+    }
+
+    .lang-dropdown.visible { display: block; }
+
+    .lang-option {
+      padding: 0.6rem 0.875rem;
+      font-size: 0.8125rem;
+      color: var(--text-2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      transition: background 0.12s;
+    }
+
+    .lang-option span { min-width: 0; overflow-wrap: anywhere; }
+    .lang-option:hover { background: var(--tint-05); color: var(--text-1); }
+    .lang-option.active { background: var(--accent-glow); color: var(--accent); }
+    .lang-flag { font-size: 0.6875rem; font-family: 'JetBrains Mono', monospace; flex-shrink: 0; }
+
+    /* ===== HELP ===== */
+    .help-section { margin-bottom: 1.5rem; }
+    .help-section:last-child { margin-bottom: 0; }
+
+    .help-section-title {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+
+    .help-section-text {
+      font-size: 0.875rem;
+      line-height: 1.7;
+      color: var(--text-2);
+      overflow-wrap: anywhere;
+    }
+
+    .help-step {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 0.625rem;
+    }
+
+    .help-step-num {
+      flex-shrink: 0;
+      width: 1.375rem;
+      height: 1.375rem;
+      background: var(--accent);
+      color: var(--on-accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      margin-top: 1px;
+    }
+
+    .help-step-text {
+      min-width: 0;
+      font-size: 0.875rem;
+      line-height: 1.6;
+      color: var(--text-2);
+      overflow-wrap: anywhere;
+    }
+
+    /* ===== MODAL ===== */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--backdrop);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 500;
+    }
+
+    .modal-backdrop.visible { display: block; }
+
+    .modal-panel {
+      display: none;
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 16px;
+      box-shadow: 0 24px 64px var(--shadow-3);
+      width: 28.75rem;
+      max-width: calc(100% - 2rem);
+      max-height: calc(100vh - 4rem);
+      overflow-y: auto;
+      z-index: 600;
+      animation: modalIn 0.25s ease;
+    }
+
+    .modal-panel.visible { display: block; }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: translate(-50%, -48%) scale(0.97); }
+      to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .modal-header {
+      padding: 1.375rem 1.5rem 1rem;
+      border-bottom: 1px solid var(--border-card);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .modal-title {
+      min-width: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-1);
+      overflow-wrap: anywhere;
+    }
+
+    .modal-close {
+      flex-shrink: 0;
+      background: var(--tint-05);
+      border: none;
+      cursor: pointer;
+      color: var(--text-3);
+      font-size: 0.875rem;
+      width: 1.75rem;
+      height: 1.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: all 0.15s;
+    }
+
+    .modal-close:hover { background: var(--tint-10); color: var(--text-1); }
+
+    .modal-body {
+      padding: 1.25rem 1.5rem;
+      font-size: 0.875rem;
+      line-height: 1.6;
+      color: var(--text-2);
+      overflow-wrap: anywhere;
+    }
+
+    .modal-body .form-field { margin-top: 1rem; }
+
+    .modal-footer {
+      padding: 0 1.5rem 1.5rem;
+      display: flex;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 0.625rem;
+    }
+
+    /* ===== TOAST ===== */
+    .toast {
+      position: fixed;
+      bottom: 1.25rem;
+      left: 50%;
+      transform: translateX(-50%);
+      max-width: calc(100% - 2rem);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-card);
+      border-left: 3px solid var(--accent);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      font-size: 0.8125rem;
+      color: var(--text-1);
+      box-shadow: 0 8px 24px var(--shadow-2);
+      z-index: 700;
+      display: none;
+      overflow-wrap: anywhere;
+    }
+
+    .toast.visible { display: block; }
+    .toast.error { border-left-color: var(--red); }
+
+    /* ===== LOADING ===== */
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2.5rem;
+      color: var(--text-3);
+      font-size: 0.875rem;
+    }
+
+    .loading-spinner {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      border: 2px solid var(--spinner-track);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 0.75rem;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1200px) {
+      .stats-grid, .stats-grid.route-mode { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .charts-grid, .charts-grid.route-mode { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        z-index: 1000;
+      }
+      body.sidebar-open .sidebar { transform: translateX(0); }
+      body.sidebar-open .sidebar-backdrop {
+        display: block;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: var(--backdrop);
+        z-index: 999;
+      }
+      .main-wrapper { margin-left: 0; }
+      .sidebar-toggle { display: flex; }
+      .stats-grid, .stats-grid.route-mode { grid-template-columns: minmax(0, 1fr); }
+      .topbar-inner { padding: 0 1rem; }
+      .container { padding: 1rem; }
+      .header-subtitle { display: none; }
+      .btn-outline.topbar-link span { display: none; }
+      .chart-card, .card { padding: 1.125rem 1rem; }
+    }
+
+    @media (max-width: 640px) {
+      .code-block, .masked-content { font-size: 0.6875rem; padding: 0.625rem; }
+      .detail-inner { padding: 0.75rem; }
+    }
+
+    @media (max-width: 420px) {
+      .status-indicator span { display: none; }
+      .header-right { gap: 0.5rem; }
+      .header-title { font-size: 1.0625rem; }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); }
+  </style>
+</head>
+<body data-role="{{ vRole }}" data-tab="{{ vTab }}" data-base-path="{{ vBasePath }}" data-username="{{ vUsername }}">
+
+  {% set dTabIcons = {
+    "overview": '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><rect x="1.5" y="1.5" width="6" height="6" rx="1.5"/><rect x="10.5" y="1.5" width="6" height="6" rx="1.5"/><rect x="1.5" y="10.5" width="6" height="6" rx="1.5"/><rect x="10.5" y="10.5" width="6" height="6" rx="1.5"/></svg>',
+    "users": '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="6.5" cy="6" r="2.75"/><path d="M1.5 15.5c0-2.75 2.25-4.5 5-4.5s5 1.75 5 4.5"/><circle cx="13" cy="6.5" r="2"/><path d="M12.5 11c2.25 0 4 1.5 4 4"/></svg>',
+    "account": '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="9" cy="6" r="3.25"/><path d="M2.75 16c0-3.25 2.75-5.25 6.25-5.25S15.25 12.75 15.25 16"/></svg>',
+    "help": '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="9" cy="9" r="7.5"/><path d="M6.75 6.75a2.25 2.25 0 0 1 4.38.75c0 1.5-2.25 1.95-2.25 1.95"/><circle cx="9" cy="13.25" r="0.01" fill="currentColor" stroke="currentColor" stroke-width="1.5"/></svg>',
+    "api": '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M6 4.5L1.5 9 6 13.5"/><path d="M12 4.5L16.5 9 12 13.5"/><path d="M10.25 3l-2.5 12"/></svg>'
+  } %}
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <div class="logo-icon">&#128737;</div>
+        <div class="logo-text">ainonyproxy</div>
+      </div>
+    </div>
+    <div class="sidebar-search">
+      <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="7" cy="7" r="5"/><path d="M11 11l3.5 3.5"/></svg>
+      <input type="text" data-i18n-placeholder="sidebar.search" placeholder="Search...">
+    </div>
+    <nav class="sidebar-nav">
+      {% for vTabName in aTabs %}
+      <a class="nav-item{% if vTabName == vTab %} active{% endif %}" href="{{ vBasePath }}{{ vTabName }}/">
+        {{ dTabIcons[vTabName] | safe }}
+        <span data-i18n="tabs.{{ vTabName }}">{{ vTabName | capitalize }}</span>
+      </a>
+      {% endfor %}
+      {% if vIsAdmin %}
+      <div class="nav-separator"></div>
+      {% if vRole == "admin" %}
+      <a class="nav-item" href="/user/dashboard/">
+        {{ dTabIcons["api"] | safe }}
+        <span data-i18n="sidebar.userDashboard">User dashboard</span>
+      </a>
+      {% else %}
+      <a class="nav-item" href="/admin/dashboard/">
+        {{ dTabIcons["overview"] | safe }}
+        <span data-i18n="sidebar.adminDashboard">Admin dashboard</span>
+      </a>
+      {% endif %}
+      {% endif %}
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user"><span data-i18n="sidebar.signedInAs">Signed in as</span> <strong>{{ vUsername }}</strong></div>
+      <button class="btn-outline" type="button" onclick="fLogout()">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M6 2.5H3.5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1H6"/><path d="M10.5 11l3-3-3-3"/><path d="M13.5 8H6"/></svg>
+        <span data-i18n="common.logout">Log out</span>
+      </button>
+      <div class="theme-row">
+        <span class="theme-row-label" data-i18n="theme.label">Theme</span>
+        <div class="theme-switch" id="theme-switch" role="group"></div>
+      </div>
+      <div class="lang-selector">
+        <button class="lang-btn" id="langBtn" type="button" onclick="fToggleLangDropdown()" data-i18n-title="langSelector.tooltip">
+          <span id="langCurrent">EN-US</span>
+          <span style="font-size: 0.45rem;">&#9660;</span>
+        </button>
+        <div class="lang-dropdown" id="langDropdown"></div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-backdrop" onclick="fToggleSidebar()"></div>
+
+  <!-- Main -->
+  <div class="main-wrapper">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="header-left">
+          <button class="sidebar-toggle" type="button" onclick="fToggleSidebar()">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 5h14M3 10h14M3 15h14"/></svg>
+          </button>
+          <div class="header-title-group">
+            <div class="header-title" data-i18n="tabs.{{ vTab }}">{{ vTab | capitalize }}</div>
+            {% if vTab == "overview" %}
+            <div class="header-subtitle" data-i18n="dashboard.headerSubtitle">Real-time privacy and PII monitoring</div>
+            {% endif %}
+          </div>
+        </div>
+        <div class="header-right">
+          <a href="/api/doc/" target="_blank" rel="noopener" class="btn-outline topbar-link">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M9 2H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V6L9 2z"/><path d="M9 2v4h4"/></svg>
+            <span data-i18n="dashboard.apiDocs">API Docs</span>
+          </a>
+          {% if vRole == "admin" %}
+          <span id="mode-badge" class="mode-badge">-</span>
+          {% endif %}
+          <div class="status-indicator">
+            <div class="status-dot"></div>
+            <span data-i18n="dashboard.active">Active</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+
+      {% if vTab == "overview" %}
+      <!-- Stats -->
+      <div id="stats-grid" class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-label-wrap">
+              <div class="stat-dot"></div>
+              <div class="stat-label" data-i18n="dashboard.totalRequests">Total Requests</div>
+            </div>
+            <div class="stat-menu">...</div>
+          </div>
+          <div id="total-requests" class="stat-value">-</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-label-wrap">
+              <div class="stat-dot"></div>
+              <div id="pii-label" class="stat-label" data-i18n="dashboard.localRouting">Local Routing</div>
+            </div>
+            <div class="stat-menu">...</div>
+          </div>
+          <div id="pii-requests" class="stat-value amber">-</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-label-wrap">
+              <div class="stat-dot"></div>
+              <div class="stat-label" data-i18n="dashboard.avgPiiScan">Avg PII Scan</div>
+            </div>
+            <div class="stat-menu">...</div>
+          </div>
+          <div id="avg-scan" class="stat-value teal">-</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-header">
+            <div class="stat-label-wrap">
+              <div class="stat-dot"></div>
+              <div class="stat-label" data-i18n="dashboard.requestsHour">Requests/Hour</div>
+            </div>
+            <div class="stat-menu">...</div>
+          </div>
+          <div id="requests-hour" class="stat-value">-</div>
+        </div>
+        <div class="stat-card route-only">
+          <div class="stat-card-header">
+            <div class="stat-label-wrap">
+              <div class="stat-dot"></div>
+              <div class="stat-label" data-i18n="dashboard.upstream">Upstream</div>
+            </div>
+            <div class="stat-menu">...</div>
+          </div>
+          <div id="upstream-requests" class="stat-value blue">-</div>
+        </div>
+        <div class="stat-card route-only">
+          <div class="stat-card-header">
+            <div class="stat-label-wrap">
+              <div class="stat-dot"></div>
+              <div class="stat-label" data-i18n="dashboard.local">Local</div>
+            </div>
+            <div class="stat-menu">...</div>
+          </div>
+          <div id="local-requests" class="stat-value green">-</div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div id="charts-grid" class="charts-grid">
+        <div class="chart-card route-only">
+          <div class="chart-title" data-i18n="dashboard.providerDistribution">Provider Distribution</div>
+          <div id="provider-split" class="provider-split">
+            <div class="provider-bar upstream" style="width: 50%">50%</div>
+            <div class="provider-bar local" style="width: 50%">50%</div>
+          </div>
+          <div class="chart-legend">
+            <div class="legend-item">
+              <div class="legend-dot upstream"></div>
+              <span data-i18n="dashboard.upstream">Upstream</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot local"></div>
+              <span data-i18n="dashboard.local">Local</span>
+            </div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title" data-i18n="dashboard.entityTypesDetected">Detected Entity Types</div>
+          <div id="entity-chart" class="entity-chart">
+            <div class="empty-chart">
+              <div class="empty-chart-icon">&#128202;</div>
+              <div class="empty-chart-text" data-i18n="dashboard.noPiiDetected">No PII detected yet</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logs -->
+      <div class="logs-section-title" data-i18n="dashboard.recentRequests">Recent Requests</div>
+      <div class="logs-container">
+        <div class="logs-table-wrapper">
+          <table id="logs-table" class="logs-table">
+            <thead>
+              <tr>
+                <th data-i18n="dashboard.time">Time</th>
+                <th class="route-only" data-i18n="dashboard.provider">Provider</th>
+                <th data-i18n="dashboard.model">Model</th>
+                <th data-i18n="dashboard.language">Language</th>
+                <th data-i18n="dashboard.piiEntities">PII Entities</th>
+                <th data-i18n="dashboard.scanTime">Scan Time</th>
+              </tr>
+            </thead>
+            <tbody id="logs-body">
+              <tr>
+                <td colspan="6">
+                  <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <span data-i18n="common.loading">Loading...</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if vTab == "users" %}
+      <div class="card">
+        <div class="card-title" data-i18n="users.registrationTitle">Registration</div>
+        <label class="checkbox-row">
+          <input type="checkbox" id="registration-open" disabled onchange="fChangeRegistration(event)">
+          <span data-i18n="users.registrationLabel">Anybody can create an account at /auth/register/ (always with the role User)</span>
+        </label>
+      </div>
+
+      <div class="card">
+        <div class="card-title" data-i18n="users.createTitle">New user</div>
+        <form id="create-user-form" class="form-grid" onsubmit="fCreateUser(event)">
+          <div class="form-field">
+            <label for="new-username" data-i18n="common.username">Username</label>
+            <input id="new-username" name="username" autocomplete="off" required maxlength="64">
+          </div>
+          <div class="form-field">
+            <label for="new-password" data-i18n="common.password">Password</label>
+            <input id="new-password" name="password" type="password" autocomplete="new-password" required minlength="8">
+          </div>
+          <div class="form-field">
+            <label for="new-role" data-i18n="common.role">Role</label>
+            <select id="new-role" name="role">
+              <option value="user" data-i18n="users.roleUser">User</option>
+              <option value="admin" data-i18n="users.roleAdmin">Administrator</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <button class="btn-primary" type="submit" data-i18n="users.create">Create user</button>
+          </div>
+        </form>
+        <div class="form-hint" data-i18n="account.minLength">At least 8 characters.</div>
+      </div>
+
+      <div class="logs-section-title" data-i18n="users.title">Dashboard users</div>
+      <div class="logs-container">
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th data-i18n="common.username">Username</th>
+                <th data-i18n="common.role">Role</th>
+                <th data-i18n="common.createdAt">Created</th>
+                <th data-i18n="common.actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-body">
+              <tr>
+                <td colspan="4">
+                  <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <span data-i18n="common.loading">Loading...</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if vTab == "account" %}
+      <div class="card">
+        <div class="card-title" data-i18n="account.title">Your account</div>
+        <dl class="info-list">
+          <dt data-i18n="common.username">Username</dt>
+          <dd id="account-username">{{ vUsername }}</dd>
+          <dt data-i18n="common.role">Role</dt>
+          <dd id="account-role">-</dd>
+          <dt data-i18n="common.createdAt">Created</dt>
+          <dd id="account-created">-</dd>
+        </dl>
+      </div>
+
+      <div class="card">
+        <div class="card-title" data-i18n="account.changePasswordTitle">Change password</div>
+        <form id="password-form" class="form-stack" onsubmit="fChangePassword(event)">
+          <input type="text" name="username" value="{{ vUsername }}" autocomplete="username" hidden>
+          <div class="form-field">
+            <label for="current-password" data-i18n="account.currentPassword">Current password</label>
+            <input id="current-password" type="password" autocomplete="current-password" required>
+          </div>
+          <div class="form-field">
+            <label for="new-password-1" data-i18n="account.newPassword">New password</label>
+            <input id="new-password-1" type="password" autocomplete="new-password" required minlength="8">
+          </div>
+          <div class="form-field">
+            <label for="new-password-2" data-i18n="account.repeatPassword">Repeat the new password</label>
+            <input id="new-password-2" type="password" autocomplete="new-password" required minlength="8">
+          </div>
+          <div>
+            <button class="btn-primary" type="submit" data-i18n="account.change">Change password</button>
+          </div>
+        </form>
+        <div class="form-hint" data-i18n="account.minLength">At least 8 characters.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" data-i18n="recoveryCode.title">Recovery code</div>
+        <div class="card-text" data-i18n="recoveryCode.accountText">If you forget your password, your recovery code lets you set a new one at /auth/recover/. Generating a new code makes the previous one stop working.</div>
+        <div class="card-text" id="recovery-status">-</div>
+        <form id="recovery-form" class="form-stack" onsubmit="fNewRecoveryCode(event)">
+          <input type="text" name="username" value="{{ vUsername }}" autocomplete="username" hidden>
+          <div class="form-field">
+            <label for="recovery-current-password" data-i18n="account.currentPassword">Current password</label>
+            <input id="recovery-current-password" type="password" autocomplete="current-password" required>
+          </div>
+          <div>
+            <button class="btn-primary" type="submit" data-i18n="recoveryCode.generate">Generate a new recovery code</button>
+          </div>
+        </form>
+      </div>
+      {% endif %}
+
+      {% if vTab == "api" %}
+      <div class="card">
+        <div class="card-title" data-i18n="api.title">Connect your applications</div>
+        <div class="card-text" data-i18n="api.intro">Send OpenAI-compatible chat requests to the endpoint of the provider you want.</div>
+        <div class="help-section-title" data-i18n="api.baseUrl">Base URL</div>
+        <code class="code-block" id="api-base-url">-</code>
+        <div class="help-section-title" data-i18n="api.exampleTitle">Example</div>
+        <code class="code-block" id="api-example">-</code>
+        <div class="form-hint" data-i18n="api.certificateNote">If the server uses its self-signed certificate, tell your client to trust it (with curl: -k).</div>
+      </div>
+
+      <div class="logs-section-title" data-i18n="api.providersTitle">Available providers</div>
+      <div class="logs-container">
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th data-i18n="dashboard.provider">Provider</th>
+                <th data-i18n="api.format">Format</th>
+                <th data-i18n="api.endpoint">Endpoint</th>
+              </tr>
+            </thead>
+            <tbody id="apis-body">
+              <tr>
+                <td colspan="3">
+                  <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <span data-i18n="common.loading">Loading...</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if vTab == "help" %}
+      <div class="card">
+        <div class="card-title" data-i18n="help.panelTitle">How to use ainonyproxy</div>
+        <div id="helpBody"></div>
+      </div>
+      {% endif %}
+
+    </main>
+  </div>
+
+  <!-- Modal (confirmations and forms) -->
+  <div class="modal-backdrop" id="modalBackdrop" onclick="fCloseModal()"></div>
+  <div class="modal-panel" id="modalPanel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle"></span>
+      <button class="modal-close" type="button" onclick="fCloseModal()">&#10005;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn-outline" type="button" id="modalCancel" onclick="fCloseModal()" data-i18n="common.cancel">Cancel</button>
+      <button class="btn-primary" type="button" id="modalConfirm" data-i18n="common.confirm">Confirm</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  {% include "partials/theme-script.html" %}
+  <script>
+    var cRole = document.body.getAttribute('data-role');
+    var cTab = document.body.getAttribute('data-tab');
+    var cUsername = document.body.getAttribute('data-username');
+
+    var vCurrentMode = null;
+    var vExpandedRowId = null;
+    var vCurrentLanguage = 'en-US';
+    var dTranslations = {};
+    var aAvailableLanguages = [];
+    var fModalConfirmAction = null;
+    var vToastTimer = null;
+
+    function fToggleSidebar() {
+      document.body.classList.toggle('sidebar-open');
+    }
+
+    // Every text that comes from the server or from a user goes through here
+    // before being written as HTML
+    function fEscapeHtml(pText) {
+      return String(pText === null || pText === undefined ? '' : pText)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // 2026-10-29@13-59-59.723 (storage, UTC) -> 2026/10/29@13:59:59.723 (display, UTC)
+    function fStorageDateToDisplay(pText) {
+      var vMatch = /^(\d{4})-(\d{2})-(\d{2})@(\d{2})-(\d{2})-(\d{2})(\.\d{1,3})?$/.exec(pText || '');
+      if (!vMatch) return pText || '';
+      var vMilliseconds = vMatch[7] ? (vMatch[7] + '000').slice(0, 4) : '.000';
+      return vMatch[1] + '/' + vMatch[2] + '/' + vMatch[3] + '@' + vMatch[4] + ':' + vMatch[5] + ':' + vMatch[6] + vMilliseconds;
+    }
+
+    function fGetTranslation(pKey) {
+      var aParts = pKey.split('.');
+      var vValue = dTranslations;
+      for (var vIndex = 0; vIndex < aParts.length; vIndex++) {
+        if (vValue && vValue[aParts[vIndex]]) {
+          vValue = vValue[aParts[vIndex]];
+        } else {
+          return pKey;
+        }
+      }
+      return vValue;
+    }
+
+    function fTranslateOr(pKey, pFallback) {
+      var vText = fGetTranslation(pKey);
+      return vText === pKey ? pFallback : vText;
+    }
+
+    function fApplyTranslations() {
+      document.querySelectorAll('[data-i18n]').forEach(function(pElement) {
+        var vKey = pElement.getAttribute('data-i18n');
+        var vTranslation = fGetTranslation(vKey);
+        if (vTranslation !== vKey) {
+          pElement.textContent = vTranslation;
+        }
+      });
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(function(pElement) {
+        var vKey = pElement.getAttribute('data-i18n-placeholder');
+        var vTranslation = fGetTranslation(vKey);
+        if (vTranslation !== vKey) {
+          pElement.placeholder = vTranslation;
+        }
+      });
+      document.querySelectorAll('[data-i18n-title]').forEach(function(pElement) {
+        var vKey = pElement.getAttribute('data-i18n-title');
+        var vTranslation = fGetTranslation(vKey);
+        if (vTranslation !== vKey) {
+          pElement.title = vTranslation;
+        }
+      });
+      document.documentElement.lang = vCurrentLanguage;
+      document.title = fTranslateOr('tabs.' + cTab, cTab) + ' - ainonyproxy';
+      fRenderThemeSwitch();
+      fRenderHelp();
+      fRenderTabTexts();
+    }
+
+    async function fLoadLanguage(pCode) {
+      try {
+        var vResponse = await fetch('/api/languages/' + encodeURIComponent(pCode));
+        if (vResponse.ok) {
+          dTranslations = await vResponse.json();
+          vCurrentLanguage = pCode;
+          try { localStorage.setItem('ainonyproxy_lang', pCode); } catch (vError) {}
+          document.getElementById('langCurrent').textContent = pCode.toUpperCase();
+          fApplyTranslations();
+          fUpdateLanguageDropdown();
+        }
+      } catch (vError) {
+        console.error('Error loading the language:', vError);
+      }
+    }
+
+    async function fLoadAvailableLanguages() {
+      try {
+        var vResponse = await fetch('/api/languages');
+        var dData = await vResponse.json();
+        aAvailableLanguages = dData.languages;
+        var vSavedLanguage = null;
+        try { vSavedLanguage = localStorage.getItem('ainonyproxy_lang'); } catch (vError) {}
+        var vSavedExists = aAvailableLanguages.some(function(pLanguage) { return pLanguage.code === vSavedLanguage; });
+        var vInitialLanguage = (vSavedExists && vSavedLanguage) || dData.default || 'en-US';
+        fUpdateLanguageDropdown();
+        await fLoadLanguage(vInitialLanguage);
+      } catch (vError) {
+        console.error('Error loading the languages:', vError);
+      }
+    }
+
+    function fUpdateLanguageDropdown() {
+      var vDropdown = document.getElementById('langDropdown');
+      vDropdown.innerHTML = aAvailableLanguages.map(function(pLanguage) {
+        var vActiveClass = pLanguage.code === vCurrentLanguage ? ' active' : '';
+        return '<div class="lang-option' + vActiveClass + '" data-code="' + fEscapeHtml(pLanguage.code) + '">' +
+          '<span class="lang-flag">' + fEscapeHtml(pLanguage.flag || '') + '</span>' +
+          '<span>' + fEscapeHtml(pLanguage.name) + '</span>' +
+          '</div>';
+      }).join('');
+      vDropdown.querySelectorAll('.lang-option').forEach(function(pOption) {
+        pOption.addEventListener('click', function() { fChangeLanguage(pOption.getAttribute('data-code')); });
+      });
+    }
+
+    function fToggleLangDropdown() {
+      document.getElementById('langDropdown').classList.toggle('visible');
+    }
+
+    function fChangeLanguage(pCode) {
+      fLoadLanguage(pCode);
+      document.getElementById('langDropdown').classList.remove('visible');
+    }
+
+    document.addEventListener('click', function(pEvent) {
+      var vSelector = document.querySelector('.lang-selector');
+      if (vSelector && !vSelector.contains(pEvent.target)) {
+        document.getElementById('langDropdown').classList.remove('visible');
+      }
+    });
+
+    document.addEventListener('keydown', function(pEvent) {
+      if (pEvent.key === 'Escape') fCloseModal();
+    });
+
+    // ===== API calls =====
+    async function fApi(pMethod, pUrl, pBody) {
+      var dOptions = { method: pMethod, credentials: 'same-origin', headers: {} };
+      if (pBody !== undefined) {
+        dOptions.headers['Content-Type'] = 'application/json';
+        dOptions.body = JSON.stringify(pBody);
+      }
+      var vResponse = await fetch(pUrl, dOptions);
+      if (vResponse.status === 401) {
+        window.location.href = '/auth/login/?next=' + encodeURIComponent(window.location.pathname);
+        throw new Error('unauthorized');
+      }
+      var dData = null;
+      try { dData = await vResponse.json(); } catch (vError) { dData = null; }
+      if (!vResponse.ok) {
+        var vType = 'generic';
+        if (dData && dData.detail && dData.detail.error && dData.detail.error.type) vType = dData.detail.error.type;
+        var vError = new Error(vType);
+        vError.type = vType;
+        throw vError;
+      }
+      return dData;
+    }
+
+    function fErrorText(pError) {
+      var vType = (pError && pError.type) || 'generic';
+      return fTranslateOr('errors.' + vType, fTranslateOr('errors.generic', 'Something went wrong. Try again.'));
+    }
+
+    function fShowToast(pMessage, pIsError) {
+      var vToast = document.getElementById('toast');
+      vToast.textContent = pMessage;
+      vToast.classList.toggle('error', !!pIsError);
+      vToast.classList.add('visible');
+      clearTimeout(vToastTimer);
+      vToastTimer = setTimeout(function() { vToast.classList.remove('visible'); }, 4000);
+    }
+
+    // ===== Modal =====
+    // pHideCancel: for the modals that only show something (one button closes them)
+    function fOpenModal(pTitle, pBodyHtml, pConfirmText, pIsDanger, pOnConfirm, pHideCancel) {
+      document.getElementById('modalTitle').textContent = pTitle;
+      document.getElementById('modalBody').innerHTML = pBodyHtml;
+      var vConfirm = document.getElementById('modalConfirm');
+      vConfirm.textContent = pConfirmText;
+      vConfirm.classList.toggle('danger', !!pIsDanger);
+      document.getElementById('modalCancel').hidden = !!pHideCancel;
+      fModalConfirmAction = pOnConfirm;
+      document.getElementById('modalBackdrop').classList.add('visible');
+      document.getElementById('modalPanel').classList.add('visible');
+      var vFirstInput = document.querySelector('#modalBody input');
+      if (vFirstInput) vFirstInput.focus(); else vConfirm.focus();
+    }
+
+    function fCloseModal() {
+      document.getElementById('modalBackdrop').classList.remove('visible');
+      document.getElementById('modalPanel').classList.remove('visible');
+      fModalConfirmAction = null;
+    }
+
+    document.getElementById('modalConfirm').addEventListener('click', function() {
+      if (fModalConfirmAction) fModalConfirmAction();
+    });
+
+    async function fLogout() {
+      try { await fApi('POST', '/api/auth/logout'); } catch (vError) {}
+      window.location.href = '/auth/login/';
+    }
+
+    // ===== Recovery codes =====
+    // Copies the code; without clipboard access it selects it to be copied by hand
+    async function fCopyCode(pElementId, pButton) {
+      var vElement = document.getElementById(pElementId);
+      try {
+        await navigator.clipboard.writeText(vElement.textContent);
+        pButton.textContent = fTranslateOr('common.copied', 'Copied');
+      } catch (vError) {
+        var vRange = document.createRange();
+        vRange.selectNodeContents(vElement);
+        var vSelection = window.getSelection();
+        vSelection.removeAllRanges();
+        vSelection.addRange(vRange);
+      }
+    }
+
+    // A recovery code is shown only once: in a modal with a copy button
+    function fShowRecoveryCode(pTitle, pText, pCode) {
+      var vBody = fEscapeHtml(pText) +
+        '<code class="code-display" id="modal-recovery-code">' + fEscapeHtml(pCode) + '</code>' +
+        '<div class="code-actions"><button class="btn-outline small" type="button" id="modal-recovery-copy">' + fEscapeHtml(fTranslateOr('common.copy', 'Copy')) + '</button></div>';
+      fOpenModal(pTitle, vBody, fTranslateOr('recoveryCode.done', 'Done'), false, function() { fCloseModal(); }, true);
+      document.getElementById('modal-recovery-copy').addEventListener('click', function(pEvent) {
+        fCopyCode('modal-recovery-code', pEvent.currentTarget);
+      });
+    }
+
+    // ===== Help tab =====
+    function fRenderHelp() {
+      var vBody = document.getElementById('helpBody');
+      if (!vBody) return;
+      var aSections = [
+        {
+          titleKey: 'help.whatIsTitle',
+          fallback: 'What is ainonyproxy?',
+          contentKey: 'help.whatIsText',
+          contentFallback: 'ainonyproxy is a privacy proxy for LLMs. It detects personal information (PII) in your messages, masks it before sending it to the AI provider, and unmasks the response for you.',
+          type: 'text'
+        },
+        {
+          titleKey: 'help.howToTitle',
+          fallback: 'How to use it',
+          type: 'steps',
+          steps: [
+            { key: 'help.step1', fallback: 'Configure your application or client to point to the ainonyproxy endpoint instead of the direct LLM provider.' },
+            { key: 'help.step2', fallback: 'Send your requests to the endpoint: /api/ai/{provider} (e.g. /api/ai/openai).' },
+            { key: 'help.step3', fallback: 'ainonyproxy will automatically detect PII, mask it with markers like <PERSON_1>, send the safe message to the LLM, and unmask the response.' },
+            { key: 'help.step4', fallback: 'Check the Overview tab to see request statistics, detected entities, and logs.' }
+          ]
+        },
+        {
+          titleKey: 'help.endpointTitle',
+          fallback: 'Main endpoint',
+          type: 'code',
+          contentKey: 'help.endpointText',
+          contentFallback: 'Send OpenAI-compatible requests to:',
+          codeKey: 'help.endpointCode',
+          codeFallback: 'POST https://{host}:11443/api/ai/{provider}'
+        },
+        {
+          titleKey: 'help.providersTitle',
+          fallback: 'Supported providers',
+          contentKey: 'help.providersText',
+          contentFallback: 'OpenAI, Anthropic, DeepSeek, Kimi, Ollama, OpenRouter, vLLM, Z.ai and llama.cpp. They are configured in /opt/ainonyproxy/config/api_urls.json and their keys in /opt/ainonyproxy/config/api_keys.json.',
+          type: 'text'
+        },
+        {
+          titleKey: 'help.dashboardTitle',
+          fallback: 'This dashboard',
+          contentKey: 'help.dashboardText',
+          contentFallback: 'The Overview tab shows the processed requests, the detected PII entities, scan times, and logs in real time. It refreshes itself every 5 seconds.',
+          type: 'text'
+        },
+        {
+          titleKey: 'help.docsTitle',
+          fallback: 'API documentation',
+          contentKey: 'help.docsText',
+          contentFallback: 'Every endpoint under /api/ is documented, and can be tried, at /api/doc/.',
+          type: 'text'
+        }
+      ];
+
+      var vHtml = '';
+      for (var vIndex = 0; vIndex < aSections.length; vIndex++) {
+        var dSection = aSections[vIndex];
+        var vTitle = fTranslateOr(dSection.titleKey, dSection.fallback);
+
+        vHtml += '<div class="help-section">';
+        vHtml += '<div class="help-section-title">' + fEscapeHtml(vTitle) + '</div>';
+
+        if (dSection.type === 'text') {
+          var vText = fTranslateOr(dSection.contentKey, dSection.contentFallback);
+          vHtml += '<div class="help-section-text">' + fEscapeHtml(vText) + '</div>';
+        } else if (dSection.type === 'steps') {
+          for (var vStepIndex = 0; vStepIndex < dSection.steps.length; vStepIndex++) {
+            var vStepText = fTranslateOr(dSection.steps[vStepIndex].key, dSection.steps[vStepIndex].fallback);
+            vHtml += '<div class="help-step">';
+            vHtml += '<div class="help-step-num">' + (vStepIndex + 1) + '</div>';
+            vHtml += '<div class="help-step-text">' + fEscapeHtml(vStepText) + '</div>';
+            vHtml += '</div>';
+          }
+        } else if (dSection.type === 'code') {
+          var vCodeText = fTranslateOr(dSection.contentKey, dSection.contentFallback);
+          var vCode = fTranslateOr(dSection.codeKey, dSection.codeFallback);
+          vHtml += '<div class="help-section-text">' + fEscapeHtml(vCodeText) + '</div>';
+          vHtml += '<code class="code-block">' + fEscapeHtml(vCode) + '</code>';
+        }
+
+        vHtml += '</div>';
+      }
+      vBody.innerHTML = vHtml;
+    }
+
+    // Texts of the tabs that are built with JavaScript
+    function fRenderTabTexts() {
+      if (cTab === 'users' && aLoadedUsers) fRenderUsers(aLoadedUsers);
+      if (cTab === 'account' && dLoadedAccount) fRenderAccount(dLoadedAccount);
+      if (cTab === 'api' && dLoadedApis) fRenderApis(dLoadedApis);
+    }
+
+    // ===== Overview tab =====
+    async function fLoadStatistics() {
+      try {
+        var dData = await fApi('GET', '/api/admin/stats');
+
+        var vModeBadge = document.getElementById('mode-badge');
+        if (vModeBadge) {
+          vModeBadge.textContent = String(dData.mode).toUpperCase();
+          vModeBadge.className = 'mode-badge ' + (dData.mode === 'route' ? 'route' : 'mask');
+        }
+
+        if (cTab !== 'overview') return;
+
+        if (vCurrentMode !== dData.mode) {
+          vCurrentMode = dData.mode;
+          document.getElementById('stats-grid').classList.toggle('route-mode', dData.mode === 'route');
+          document.getElementById('charts-grid').classList.toggle('route-mode', dData.mode === 'route');
+          document.getElementById('logs-table').classList.toggle('route-mode', dData.mode === 'route');
+        }
+
+        document.getElementById('total-requests').textContent = Number(dData.total_requests).toLocaleString();
+        document.getElementById('avg-scan').textContent = Number(dData.avg_scan_time_ms) + 'ms';
+        document.getElementById('requests-hour').textContent = Number(dData.requests_last_hour).toLocaleString();
+
+        var vPiiLabel = document.getElementById('pii-label');
+        if (dData.mode === 'mask') {
+          vPiiLabel.textContent = fTranslateOr('dashboard.masked', 'Masked');
+          document.getElementById('pii-requests').textContent = Number(dData.pii_requests).toLocaleString() + ' (' + Number(dData.pii_percentage) + '%)';
+        } else {
+          vPiiLabel.textContent = fTranslateOr('dashboard.localRouting', 'Local Routing');
+          document.getElementById('pii-requests').textContent = Number(dData.local_requests).toLocaleString();
+        }
+
+        if (dData.mode === 'route') {
+          document.getElementById('upstream-requests').textContent = Number(dData.upstream_requests).toLocaleString();
+          document.getElementById('local-requests').textContent = Number(dData.local_requests).toLocaleString();
+
+          var vTotal = Number(dData.upstream_requests) + Number(dData.local_requests);
+          var vUpstreamPct = vTotal > 0 ? Math.round((Number(dData.upstream_requests) / vTotal) * 100) : 50;
+          var vLocalPct = 100 - vUpstreamPct;
+
+          document.getElementById('provider-split').innerHTML =
+            '<div class="provider-bar upstream" style="width:' + Math.max(vUpstreamPct, 10) + '%">' + vUpstreamPct + '%</div>' +
+            '<div class="provider-bar local" style="width:' + Math.max(vLocalPct, 10) + '%">' + vLocalPct + '%</div>';
+        }
+
+        var vChartElement = document.getElementById('entity-chart');
+        if (dData.entity_breakdown && dData.entity_breakdown.length > 0) {
+          var vMaxCount = Math.max.apply(null, dData.entity_breakdown.map(function(pEntity) { return Number(pEntity.count); }));
+          vChartElement.innerHTML = dData.entity_breakdown.slice(0, 6).map(function(pEntity) {
+            return '<div class="entity-row">' +
+              '<div class="entity-name" title="' + fEscapeHtml(pEntity.entity) + '">' + fEscapeHtml(pEntity.entity) + '</div>' +
+              '<div class="entity-bar-container">' +
+                '<div class="entity-bar" style="width:' + ((Number(pEntity.count) / vMaxCount) * 100) + '%"></div>' +
+              '</div>' +
+              '<div class="entity-count">' + Number(pEntity.count) + '</div>' +
+            '</div>';
+          }).join('');
+        } else {
+          vChartElement.innerHTML = '<div class="empty-chart"><div class="empty-chart-icon">&#128202;</div><div class="empty-chart-text">' + fEscapeHtml(fTranslateOr('dashboard.noPiiDetected', 'No PII detected yet')) + '</div></div>';
+        }
+      } catch (vError) {
+        console.error(fTranslateOr('dashboard.errorLoadingStats', 'Failed to load statistics'), vError);
+      }
+    }
+
+    function fToggleRow(pLogId) {
+      var vWasExpanded = vExpandedRowId === pLogId;
+
+      document.querySelectorAll('.detail-row.visible').forEach(function(pElement) { pElement.classList.remove('visible'); });
+      document.querySelectorAll('.logs-table tbody tr.expanded').forEach(function(pElement) { pElement.classList.remove('expanded'); });
+      document.querySelectorAll('.arrow-icon.expanded').forEach(function(pElement) { pElement.classList.remove('expanded'); });
+
+      if (!vWasExpanded) {
+        var vLogRow = document.getElementById('log-' + pLogId);
+        var vDetailRow = document.getElementById('detail-' + pLogId);
+        var vArrow = document.getElementById('arrow-' + pLogId);
+
+        if (vLogRow && vDetailRow) {
+          vLogRow.classList.add('expanded');
+          vDetailRow.classList.add('visible');
+          if (vArrow) vArrow.classList.add('expanded');
+          vExpandedRowId = pLogId;
+        }
+      } else {
+        vExpandedRowId = null;
+      }
+    }
+
+    function fFormatMaskedView(pMaskedContent, pEntities) {
+      if (pMaskedContent) {
+        return fEscapeHtml(pMaskedContent)
+          .replace(/&lt;([A-Z_]+_\d+)&gt;/g, '<span class="pii-marker">&lt;$1&gt;</span>');
+      }
+      if (!pEntities || pEntities.length === 0) {
+        return '<span style="color: var(--text-muted)">' + fEscapeHtml(fTranslateOr('dashboard.noPiiInRequest', 'No PII detected in this request')) + '</span>';
+      }
+      return '<span style="color: var(--text-muted)">' + fEscapeHtml(fTranslateOr('dashboard.maskedContentNotLogged', 'Masked content not logged (log_masked_content: false)')) + '</span>';
+    }
+
+    async function fLoadLogs() {
+      try {
+        var dData = await fApi('GET', '/api/admin/logs?limit=50');
+        var vTbody = document.getElementById('logs-body');
+
+        if (dData.logs.length === 0) {
+          vTbody.innerHTML = '<tr><td colspan="6"><div class="empty-chart"><div class="empty-chart-icon">&#128203;</div><div class="empty-chart-text">' + fEscapeHtml(fTranslateOr('dashboard.noRequests', 'No requests yet')) + '</div></div></td></tr>';
+          return;
+        }
+
+        vTbody.innerHTML = dData.logs.map(function(pLog, pIndex) {
+          var vTime = fStorageDateToDisplay(pLog.timestamp);
+          var aEntities = pLog.entities ? String(pLog.entities).split(',').filter(function(pEntity) { return pEntity.trim(); }) : [];
+          var vLanguage = String(pLog.language || 'en');
+          var vDetectedLanguage = pLog.detected_language;
+
+          var vLanguageDisplay = pLog.language_fallback && vDetectedLanguage
+            ? '<span class="log-lang-fallback">' + fEscapeHtml(String(vDetectedLanguage).toUpperCase()) + '</span><span class="log-lang-arrow">&#8594;</span><span>' + fEscapeHtml(vLanguage.toUpperCase()) + '</span>'
+            : fEscapeHtml(vLanguage.toUpperCase());
+
+          var vLogId = Number.isInteger(pLog.id) ? pLog.id : pIndex;
+          var vIsExpanded = vExpandedRowId === vLogId;
+          var vProviderClass = pLog.provider === 'upstream' || pLog.provider === 'local' ? pLog.provider : '';
+
+          var vMainRow =
+            '<tr id="log-' + vLogId + '" class="' + (vIsExpanded ? 'expanded' : '') + '" data-log-id="' + vLogId + '">' +
+              '<td>' +
+                '<span id="arrow-' + vLogId + '" class="arrow-icon ' + (vIsExpanded ? 'expanded' : '') + '">&#9654;</span>' +
+                '<span class="log-time">' + fEscapeHtml(vTime) + '</span>' +
+              '</td>' +
+              '<td class="route-only">' +
+                '<span class="provider-badge ' + vProviderClass + '">' + fEscapeHtml(pLog.provider) + '</span>' +
+              '</td>' +
+              '<td class="log-model">' + fEscapeHtml(pLog.model) + '</td>' +
+              '<td class="log-lang">' + vLanguageDisplay + '</td>' +
+              '<td>' +
+                (aEntities.length > 0
+                  ? '<div class="entity-tags">' + aEntities.map(function(pEntity) { return '<span class="entity-tag">' + fEscapeHtml(pEntity.trim()) + '</span>'; }).join('') + '</div>'
+                  : '<span style="color: var(--text-muted)">-</span>') +
+              '</td>' +
+              '<td class="log-scan-time">' + Number(pLog.scan_time_ms) + 'ms</td>' +
+            '</tr>';
+
+          var vDetailRow =
+            '<tr id="detail-' + vLogId + '" class="detail-row ' + (vIsExpanded ? 'visible' : '') + '">' +
+              '<td colspan="6" class="detail-content">' +
+                '<div class="detail-inner">' +
+                  '<div class="masked-content">' + fFormatMaskedView(pLog.masked_content, aEntities) + '</div>' +
+                '</div>' +
+              '</td>' +
+            '</tr>';
+
+          return vMainRow + vDetailRow;
+        }).join('');
+
+        vTbody.querySelectorAll('tr[data-log-id]').forEach(function(pRow) {
+          pRow.addEventListener('click', function() { fToggleRow(Number(pRow.getAttribute('data-log-id'))); });
+        });
+      } catch (vError) {
+        console.error(fTranslateOr('dashboard.errorLoadingLogs', 'Failed to load logs'), vError);
+      }
+    }
+
+    // ===== Users tab =====
+    var aLoadedUsers = null;
+
+    function fRoleLabel(pRole) {
+      return pRole === 'admin' ? fTranslateOr('users.roleAdmin', 'Administrator') : fTranslateOr('users.roleUser', 'User');
+    }
+
+    function fRenderUsers(pUsers) {
+      var vTbody = document.getElementById('users-body');
+      if (!vTbody) return;
+      if (!pUsers.length) {
+        vTbody.innerHTML = '<tr><td colspan="4"><div class="empty-chart"><div class="empty-chart-text">' + fEscapeHtml(fTranslateOr('users.noUsers', 'There are no users')) + '</div></div></td></tr>';
+        return;
+      }
+      vTbody.innerHTML = pUsers.map(function(pUser) {
+        var vRoleClass = pUser.role === 'admin' ? 'admin' : 'user';
+        var vIsMe = pUser.username === cUsername;
+        return '<tr>' +
+          '<td>' + fEscapeHtml(pUser.username) + (vIsMe ? ' <span style="color: var(--text-3)">' + fEscapeHtml(fTranslateOr('users.you', '(you)')) + '</span>' : '') + '</td>' +
+          '<td><span class="role-badge ' + vRoleClass + '">' + fEscapeHtml(fRoleLabel(pUser.role)) + '</span></td>' +
+          '<td class="mono">' + fEscapeHtml(fStorageDateToDisplay(pUser.created_at)) + '</td>' +
+          '<td class="actions">' +
+            '<button class="btn-outline small" type="button" data-action="reset" data-username="' + fEscapeHtml(pUser.username) + '">' + fEscapeHtml(fTranslateOr('users.resetPassword', 'New password')) + '</button>' +
+            (vIsMe ? '' : '<button class="btn-outline small danger" type="button" data-action="delete" data-username="' + fEscapeHtml(pUser.username) + '">' + fEscapeHtml(fTranslateOr('common.delete', 'Delete')) + '</button>') +
+          '</td>' +
+        '</tr>';
+      }).join('');
+      vTbody.querySelectorAll('button[data-action]').forEach(function(pButton) {
+        pButton.addEventListener('click', function() {
+          var vName = pButton.getAttribute('data-username');
+          if (pButton.getAttribute('data-action') === 'delete') fConfirmDeleteUser(vName); else fOpenResetPassword(vName);
+        });
+      });
+    }
+
+    async function fLoadUsers() {
+      try {
+        var dData = await fApi('GET', '/api/admin/users');
+        aLoadedUsers = dData.users;
+        fRenderUsers(aLoadedUsers);
+      } catch (vError) {
+        fShowToast(fErrorText(vError), true);
+      }
+    }
+
+    async function fCreateUser(pEvent) {
+      pEvent.preventDefault();
+      var vForm = document.getElementById('create-user-form');
+      var vButton = vForm.querySelector('button[type="submit"]');
+      vButton.disabled = true;
+      try {
+        var dData = await fApi('POST', '/api/admin/users', {
+          username: document.getElementById('new-username').value.trim(),
+          password: document.getElementById('new-password').value,
+          role: document.getElementById('new-role').value
+        });
+        vForm.reset();
+        fShowToast(fTranslateOr('users.created', 'User created'));
+        if (dData && dData.recovery_code && dData.user) {
+          fShowRecoveryCode(
+            fTranslateOr('recoveryCode.userCreatedTitle', 'Recovery code of {username}').replace('{username}', dData.user.username),
+            fTranslateOr('recoveryCode.userCreatedText', 'Give this recovery code to {username}: it lets them set a new password by themselves. It is shown only this once.').replace('{username}', dData.user.username),
+            dData.recovery_code
+          );
+        }
+        await fLoadUsers();
+      } catch (vError) {
+        fShowToast(fErrorText(vError), true);
+      } finally {
+        vButton.disabled = false;
+      }
+    }
+
+    async function fLoadRegistration() {
+      var vCheckbox = document.getElementById('registration-open');
+      if (!vCheckbox) return;
+      try {
+        var dData = await fApi('GET', '/api/admin/registration');
+        vCheckbox.checked = !!dData.open;
+        vCheckbox.disabled = false;
+      } catch (vError) {
+        fShowToast(fErrorText(vError), true);
+      }
+    }
+
+    async function fChangeRegistration(pEvent) {
+      var vCheckbox = pEvent.target;
+      var vWanted = vCheckbox.checked;
+      vCheckbox.disabled = true;
+      try {
+        var dData = await fApi('PUT', '/api/admin/registration', { open: vWanted });
+        vCheckbox.checked = !!dData.open;
+        fShowToast(dData.open
+          ? fTranslateOr('users.registrationOpened', 'Registration opened')
+          : fTranslateOr('users.registrationClosed', 'Registration closed'));
+      } catch (vError) {
+        vCheckbox.checked = !vWanted;
+        fShowToast(fErrorText(vError), true);
+      } finally {
+        vCheckbox.disabled = false;
+      }
+    }
+
+    function fConfirmDeleteUser(pUsername) {
+      var vText = fTranslateOr('users.confirmDeleteText', 'The user {username} and all their sessions will be deleted. This cannot be undone.').replace('{username}', pUsername);
+      fOpenModal(fTranslateOr('users.confirmDeleteTitle', 'Delete user'), fEscapeHtml(vText), fTranslateOr('common.delete', 'Delete'), true, async function() {
+        try {
+          await fApi('DELETE', '/api/admin/users/' + encodeURIComponent(pUsername));
+          fCloseModal();
+          fShowToast(fTranslateOr('users.deleted', 'User deleted'));
+          await fLoadUsers();
+        } catch (vError) {
+          fShowToast(fErrorText(vError), true);
+        }
+      });
+    }
+
+    function fOpenResetPassword(pUsername) {
+      var vTitle = fTranslateOr('users.resetTitle', 'New password for {username}').replace('{username}', pUsername);
+      var vBody = fEscapeHtml(fTranslateOr('users.resetText', 'The user will have to log in again with the new password.')) +
+        '<div class="form-field"><label for="reset-password">' + fEscapeHtml(fTranslateOr('account.newPassword', 'New password')) + '</label>' +
+        '<input id="reset-password" type="password" autocomplete="new-password" minlength="8"></div>';
+      fOpenModal(vTitle, vBody, fTranslateOr('common.save', 'Save'), false, async function() {
+        try {
+          await fApi('PUT', '/api/admin/users/' + encodeURIComponent(pUsername) + '/password', {
+            password: document.getElementById('reset-password').value
+          });
+          fCloseModal();
+          fShowToast(fTranslateOr('users.passwordChanged', 'Password changed'));
+          if (pUsername === cUsername) window.location.href = '/auth/login/';
+        } catch (vError) {
+          fShowToast(fErrorText(vError), true);
+        }
+      });
+    }
+
+    // ===== Account tab =====
+    var dLoadedAccount = null;
+
+    function fRenderAccount(pAccount) {
+      document.getElementById('account-username').textContent = pAccount.username;
+      document.getElementById('account-role').textContent = fRoleLabel(pAccount.role);
+      document.getElementById('account-created').textContent = fStorageDateToDisplay(pAccount.created_at);
+      document.getElementById('recovery-status').textContent = pAccount.has_recovery_code
+        ? fTranslateOr('recoveryCode.statusYes', 'You have had a recovery code since {date}.').replace('{date}', fStorageDateToDisplay(pAccount.recovery_code_created_at))
+        : fTranslateOr('recoveryCode.statusNo', 'You do not have a recovery code yet. Generate one and keep it in a safe place.');
+    }
+
+    async function fNewRecoveryCode(pEvent) {
+      pEvent.preventDefault();
+      var vForm = document.getElementById('recovery-form');
+      var vButton = vForm.querySelector('button[type="submit"]');
+      vButton.disabled = true;
+      try {
+        var dData = await fApi('POST', '/api/user/account/recovery-code', {
+          current_password: document.getElementById('recovery-current-password').value
+        });
+        vForm.reset();
+        if (dLoadedAccount) {
+          dLoadedAccount.has_recovery_code = true;
+          dLoadedAccount.recovery_code_created_at = dData.recovery_code_created_at;
+          fRenderAccount(dLoadedAccount);
+        }
+        fShowRecoveryCode(
+          fTranslateOr('recoveryCode.generatedTitle', 'Your new recovery code'),
+          fTranslateOr('recoveryCode.generatedText', 'The previous code no longer works. Save this one: it is shown only this once.'),
+          dData.recovery_code
+        );
+      } catch (vError) {
+        fShowToast(fErrorText(vError), true);
+      } finally {
+        vButton.disabled = false;
+      }
+    }
+
+    async function fLoadAccount() {
+      try {
+        dLoadedAccount = await fApi('GET', '/api/user/account');
+        fRenderAccount(dLoadedAccount);
+      } catch (vError) {
+        fShowToast(fErrorText(vError), true);
+      }
+    }
+
+    async function fChangePassword(pEvent) {
+      pEvent.preventDefault();
+      var vNew1 = document.getElementById('new-password-1').value;
+      var vNew2 = document.getElementById('new-password-2').value;
+      if (vNew1 !== vNew2) {
+        fShowToast(fTranslateOr('errors.passwords_do_not_match', 'The new passwords do not match.'), true);
+        return;
+      }
+      var vForm = document.getElementById('password-form');
+      var vButton = vForm.querySelector('button[type="submit"]');
+      vButton.disabled = true;
+      try {
+        await fApi('PUT', '/api/user/account/password', {
+          current_password: document.getElementById('current-password').value,
+          new_password: vNew1
+        });
+        vForm.reset();
+        fShowToast(fTranslateOr('account.changed', 'Password changed. Your other sessions have been closed.'));
+      } catch (vError) {
+        fShowToast(fErrorText(vError), true);
+      } finally {
+        vButton.disabled = false;
+      }
+    }
+
+    // ===== API tab =====
+    var dLoadedApis = null;
+
+    function fRenderApis(pData) {
+      var vBaseUrl = window.location.origin + '/api/ai/';
+      document.getElementById('api-base-url').textContent = vBaseUrl;
+
+      var aNames = Object.keys(pData.available_apis || {});
+      var vExampleProvider = aNames.indexOf('openai') !== -1 ? 'openai' : (aNames[0] || '{provider}');
+      document.getElementById('api-example').textContent =
+        'curl -k ' + vBaseUrl + vExampleProvider + " \\\n" +
+        "  -H 'Content-Type: application/json' \\\n" +
+        "  -d '{\"model\": \"MODEL\", \"messages\": [{\"role\": \"user\", \"content\": \"Hello, I am Jane Doe\"}]}'";
+
+      var vTbody = document.getElementById('apis-body');
+      if (!aNames.length) {
+        vTbody.innerHTML = '<tr><td colspan="3"><div class="empty-chart"><div class="empty-chart-text">' + fEscapeHtml(fTranslateOr('api.noProviders', 'There are no providers configured')) + '</div></div></td></tr>';
+        return;
+      }
+      vTbody.innerHTML = aNames.sort().map(function(pName) {
+        var dApi = pData.available_apis[pName];
+        return '<tr>' +
+          '<td>' + fEscapeHtml(pName) + '</td>' +
+          '<td class="mono">' + fEscapeHtml(dApi.type) + '</td>' +
+          '<td class="mono">POST ' + fEscapeHtml(dApi.url) + '</td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    async function fLoadApis() {
+      try {
+        dLoadedApis = await fApi('GET', '/api/ai/');
+        fRenderApis(dLoadedApis);
+      } catch (vError) {
+        fShowToast(fErrorText(vError), true);
+      }
+    }
+
+    // ===== Start =====
+    fRenderThemeSwitch();
+    fLoadAvailableLanguages().then(function() {
+      if (cRole === 'admin') fLoadStatistics();
+      if (cTab === 'overview') {
+        fLoadLogs();
+        setInterval(function() { fLoadStatistics(); fLoadLogs(); }, 5000);
+      }
+      if (cTab === 'users') {
+        fLoadRegistration();
+        fLoadUsers();
+      }
+      if (cTab === 'account') fLoadAccount();
+      if (cTab === 'api') fLoadApis();
+    });
+  </script>
+</body>
+</html>

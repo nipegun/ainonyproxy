@@ -1,0 +1,101 @@
+{
+  "providers": {
+    "deepseek": {
+      "models": [
+        {
+          "id": "deepseek-chat",
+          "name": "deepseek-chat",
+          "description": "General conversational model"
+        },
+        {
+          "id": "deepseek-reasoner",
+          "name": "deepseek-reasoner",
+          "description": "Reasoning model"
+        },
+        {
+          "id": "deepseek-coder",
+          "name": "deepseek-coder",
+          "description": "Model specialized in code"
+        }
+      ],
+      "default": "deepseek-chat"
+    },
+    "openai": {
+      "models": [
+        {
+          "id": "gpt-5-nano",
+          "name": "gpt-5-nano",
+          "description": "Fast and cheap GPT-5 model"
+        },
+        {
+          "id": "gpt-5-mini",
+          "name": "gpt-5-mini",
+          "description": "Fast GPT-5 model for specific tasks"
+        },
+        {
+          "id": "gpt-5.2",
+          "name": "gpt-5.2",
+          "description": "The most complete model for code and agentic tasks"
+        }
+      ],
+      "default": "gpt-5-nano"
+    },
+    "anthropic": {
+      "models": [
+        {
+          "id": "claude-haiku-4-5-20251001",
+          "name": "claude-haiku-4.5",
+          "description": "Fast and light model"
+        },
+        {
+          "id": "claude-sonnet-4-5-20250929",
+          "name": "claude-sonnet-4.5",
+          "description": "Smart and efficient model for daily use"
+        },
+        {
+          "id": "claude-opus-4-5-20251101",
+          "name": "claude-opus-4.5",
+          "description": "The most powerful model for complex tasks"
+        }
+      ],
+      "default": "claude-sonnet-4-20250514"
+    },
+    "ollama": {
+      "models": [
+        {
+          "id": "llama3.2",
+          "name": "Llama 3.2",
+          "description": "Meta Llama 3.2"
+        },
+        {
+          "id": "llama3.1",
+          "name": "Llama 3.1",
+          "description": "Meta Llama 3.1"
+        },
+        {
+          "id": "mistral",
+          "name": "Mistral",
+          "description": "Mistral 7B"
+        },
+        {
+          "id": "codellama",
+          "name": "Code Llama",
+          "description": "Model for code"
+        }
+      ],
+      "default": "llama3.2"
+    },
+    "vllm": {
+      "models": [],
+      "default": null
+    },
+    "llama_cpp": {
+      "models": [],
+      "default": null
+    },
+    "llama.cpp": {
+      "models": [],
+      "default": null
+    }
+  }
+}
